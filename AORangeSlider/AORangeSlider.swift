@@ -8,6 +8,11 @@
 
 import UIKit
 
+public protocol AORangeSliderDelegate: AnyObject {
+    func rangeSliderDidBeginTracking(_ slider: AORangeSlider)
+}
+
+
 @IBDesignable
 @objc open class AORangeSlider: UIControl {
 
@@ -429,25 +434,50 @@ import UIKit
         ball.backgroundColor = .clear
         ball.layer.shadowColor = UIColor.clear.cgColor
     }
+    
+    
+    public weak var delegate: AORangeSliderDelegate?
 
+    public var islowHandleSelected: Bool {
+        lowHandle.isHighlighted
+    }
+
+    public var isHighHandleSelected: Bool {
+        highHandle.isHighlighted
+    }
+    
+    
     // MARK: - override UIControl method
     
     /// begin track, decide which thumb response to the action
     override open func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
         let touchPoint = touch.location(in: self)
         let lowRect = lowHandle.frame.inset(by: lowTouchEdgeInsets)
+        let highRect = highHandle.frame.inset(by: highTouchEdgeInsets)
+
         if lowRect.contains(touchPoint) {
-            lowHandle.isHighlighted = true
-            lowTouchOffset = Double(touchPoint.x - lowHandle.center.x)
+            if !highRect.contains(touchPoint) || (lowHandle === subviews.last) {
+                lowHandle.isHighlighted = true
+                lowTouchOffset = Double(touchPoint.x - lowHandle.center.x)
+                bringSubviewToFront(lowHandle)
+            }
         }
 
-        let highRect = highHandle.frame.inset(by: highTouchEdgeInsets)
         if highRect.contains(touchPoint) {
-            highHandle.isHighlighted = true
-            highTouchOffset = Double(touchPoint.x - highHandle.center.x)
+            if !lowRect.contains(touchPoint) || (highHandle === subviews.last) {
+                highHandle.isHighlighted = true
+                highTouchOffset = Double(touchPoint.x - highHandle.center.x)
+                bringSubviewToFront(highHandle)
+            }
         }
 
         stepValueInternal = stepValueContinuously ? stepValue : 0.0
+
+        delegate?.rangeSliderDidBeginTracking(self)
+
+        if changeValueContinuously {
+            sendActions(for: .valueChanged)
+        }
 
         return true
     }
