@@ -308,8 +308,10 @@ public protocol AORangeSliderDelegate: AnyObject {
 
         lowHandle = UIImageView()
         addSubview(lowHandle)
+        lowHandle.contentMode = .center
         highHandle = UIImageView()
         addSubview(highHandle)
+        highHandle.contentMode = .center
         lowHandle.addObserver(self, forKeyPath: "frame", options: .new, context: nil)
         highHandle.addObserver(self, forKeyPath: "frame", options: .new, context: nil)
 
@@ -362,7 +364,10 @@ public protocol AORangeSliderDelegate: AnyObject {
         let rect = CGRect(x: x, y: y, width: w, height: h)
         return rect
     }
-
+    
+    public var lowImageHorizontalPadding: CGFloat = 0
+    public var highImageHorizontalPadding: CGFloat = 0
+    
     override open func layoutSubviews() {
         super.layoutSubviews()
 
@@ -380,7 +385,9 @@ public protocol AORangeSliderDelegate: AnyObject {
         if lowHandle.image == nil {
             lowHandle.frame = handleRectFor(value: lowValue, size: CGSize(width: systemBallLength, height: systemBallLength))
         } else {
-            lowHandle.frame = handleRectFor(value: lowValue, size: lowHandle.image!.size)
+            var imageSize = lowHandle.image!.size
+            imageSize.width -= 2 * lowImageHorizontalPadding
+            lowHandle.frame = handleRectFor(value: lowValue, size: imageSize)
         }
 
         // highHandle
@@ -390,7 +397,9 @@ public protocol AORangeSliderDelegate: AnyObject {
         if highHandle.image == nil {
             highHandle.frame = handleRectFor(value: highValue, size: CGSize(width: systemBallLength, height: systemBallLength))
         } else {
-            highHandle.frame = handleRectFor(value: highValue, size: highHandle.image!.size)
+            var imageSize = highHandle.image!.size
+            imageSize.width -= 2 * highImageHorizontalPadding
+            highHandle.frame = handleRectFor(value: highValue, size: imageSize)
         }
         
         trackBackgroundImageView.frame = trackBackgroundRect()
@@ -452,8 +461,15 @@ public protocol AORangeSliderDelegate: AnyObject {
     /// begin track, decide which thumb response to the action
     override open func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
         let touchPoint = touch.location(in: self)
-        let lowRect = lowHandle.frame.inset(by: lowTouchEdgeInsets)
-        let highRect = highHandle.frame.inset(by: highTouchEdgeInsets)
+        var _lowTouchEdgeInsets = lowTouchEdgeInsets
+        _lowTouchEdgeInsets.left -= lowImageHorizontalPadding
+        _lowTouchEdgeInsets.right -= lowImageHorizontalPadding
+        let lowRect = lowHandle.frame.inset(by: _lowTouchEdgeInsets)
+        
+        var _highTouchEdgeInsets = highTouchEdgeInsets
+        _highTouchEdgeInsets.left -= highImageHorizontalPadding
+        _highTouchEdgeInsets.right -= highImageHorizontalPadding
+        let highRect = highHandle.frame.inset(by: _highTouchEdgeInsets)
 
         if lowRect.contains(touchPoint) {
             if !highRect.contains(touchPoint) || (lowHandle === subviews.last) {
