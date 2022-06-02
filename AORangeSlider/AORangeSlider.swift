@@ -10,6 +10,7 @@ import UIKit
 
 public protocol AORangeSliderDelegate: AnyObject {
     func rangeSliderDidBeginTracking(_ slider: AORangeSlider)
+    func rangeSliderWillDrawTrackImage(_ slider: AORangeSlider, drawView: UIView)
 }
 
 
@@ -209,7 +210,7 @@ public protocol AORangeSliderDelegate: AnyObject {
     /// backgroundImage of the bar, default is a gray 1x2 image
     @objc @IBInspectable open var trackBackgroundColor: UIColor = .gray {
         didSet {
-            self.trackBackgroundImage = AORangeSlider.getImage(color: self.trackBackgroundColor, size: CGSize(width: 1, height: 2))
+            self.trackBackgroundImage = getImage(color: self.trackBackgroundColor, size: CGSize(width: 1, height: 2))
         }
     }
     
@@ -276,17 +277,17 @@ public protocol AORangeSliderDelegate: AnyObject {
             if trackImage != nil {
                 return trackImage
             }else if(trackColor != nil) {
-                return AORangeSlider.getImage(color: trackColor!, size: CGSize(width: 1, height: 2))
+                return getImage(color: trackColor!, size: CGSize(width: 1, height: 2))
             }else {
-                return AORangeSlider.getImage(color: #colorLiteral(red: 0, green: 0.4793452024, blue: 0.9990863204, alpha: 1), size: CGSize(width: 1, height: 2))
+                return getImage(color: #colorLiteral(red: 0, green: 0.4793452024, blue: 0.9990863204, alpha: 1), size: CGSize(width: 1, height: 2))
             }
         } else {
             if trackCrossedImage != nil {
                 return trackCrossedImage
             }else if(trackCrossedColor != nil) {
-                return AORangeSlider.getImage(color: trackCrossedColor!, size: CGSize(width: 1, height: 2))
+                return getImage(color: trackCrossedColor!, size: CGSize(width: 1, height: 2))
             }else {
-                return AORangeSlider.getImage(color: .red, size: CGSize(width: 1, height: 2))
+                return getImage(color: .red, size: CGSize(width: 1, height: 2))
             }
             
         }
@@ -300,7 +301,7 @@ public protocol AORangeSliderDelegate: AnyObject {
         highMinimumValue = Double.nan
 
         trackBackgroundImageView = UIImageView()
-        trackBackgroundImage = AORangeSlider.getImage(color: #colorLiteral(red: 0.7333333333, green: 0.7333333333, blue: 0.7333333333, alpha: 1), size: CGSize(width: 1, height: 2))
+        trackBackgroundImage = getImage(color: #colorLiteral(red: 0.7333333333, green: 0.7333333333, blue: 0.7333333333, alpha: 1), size: CGSize(width: 1, height: 2))
         addSubview(self.trackBackgroundImageView)
 
         trackImageView = UIImageView()
@@ -560,7 +561,7 @@ public protocol AORangeSliderDelegate: AnyObject {
     // MARK: - class method to create image fast
 
     /// convert view to image
-    @objc open class func getImage(view: UIView) -> UIImage {
+    @objc open func getImage(view: UIView) -> UIImage {
         UIGraphicsBeginImageContext(view.bounds.size)
         view.layer.render(in: UIGraphicsGetCurrentContext()!)
         let screenShot = UIGraphicsGetImageFromCurrentImageContext()
@@ -569,10 +570,11 @@ public protocol AORangeSliderDelegate: AnyObject {
     }
 
     /// create a image with color
-    @objc open class func getImage(color: UIColor, size: CGSize) -> UIImage {
+    @objc open func getImage(color: UIColor, size: CGSize) -> UIImage {
         let v = UIView()
         v.frame.size = size
         v.backgroundColor = color
+        delegate?.rangeSliderWillDrawTrackImage(self, drawView: v)
         return getImage(view: v)
     }
 }
